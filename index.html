@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>katakhelne — board games in Kathmandu</title>
+<meta name="description" content="A map of the cafes, bars, co-working spaces and game rooms around Kathmandu where there are board games on the shelf. Works offline.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FAF1E4">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/icons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="katakhelne">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- The two faces used above the fold; the rest load normally. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/atkinson-hyperlegible-400-latin.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="assets/fonts/manrope-400-800-latin.woff2">
+
+<link rel="stylesheet" href="assets/css/fonts.css">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="assets/css/app.css">
+
+<script src="assets/vendor/leaflet/leaflet.js" defer></script>
+<script src="assets/js/config.js" defer></script>
+<script src="assets/js/app.js" defer></script>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <div id="map" role="application" aria-label="Map of board game places in Kathmandu"></div>
+
+  <div class="brand">
+    <span class="tt" aria-hidden="true"><span>T</span><span>T</span></span>
+    <em>katakhelne</em>
+  </div>
+
+  <button class="locate" id="locate" aria-label="Find places near me">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.6"/>
+      <path d="M12 1.6v3M12 19.4v3M22.4 12h-3M4.6 12h-3"/>
+    </svg>
+  </button>
+
+  <div class="install" id="install">
+    <button class="go" id="installGo" type="button">Add to home screen</button>
+    <button class="x"  id="installX"  type="button" aria-label="Not now">&times;</button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="sheet" id="sheet">
+    <div class="grab" id="grab"><i></i></div>
+    <div class="head" id="head">
+      <h1 id="title">Board games in Kathmandu</h1>
+      <small id="sub"></small>
+    </div>
+    <div class="body" id="body">
+      <div id="list"></div>
+      <div id="detail" class="detail hidden"></div>
+    </div>
+  </div>
+</div>
+
+<noscript>
+  <div style="position:fixed;inset:0;display:grid;place-items:center;padding:32px;
+              background:var(--tumlet-beige);text-align:center;z-index:9999">
+    <p>katakhelne is an interactive map — it needs JavaScript switched on.</p>
+  </div>
+</noscript>
+
+</body>
+</html>

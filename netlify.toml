@@ -1,0 +1,36 @@
+# katakhelne — Netlify config
+#
+# Nothing to build: the repo root IS the site.
+
+[build]
+  publish = "."
+
+# Netlify's default for every file is `public, max-age=0, must-revalidate`,
+# which is already the right answer for the service worker, the HTML and the
+# data — importantly it is NOT `no-store`, which would stop Chrome
+# registering the worker at all. sw.js is pinned explicitly so that stays
+# true if the default ever changes.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+# Fingerprinted-by-name and version-pinned assets never change in place,
+# so they can be cached hard. Everything else keeps the revalidating
+# default, because app.css / app.js are NOT content-hashed and a stale copy
+# would outlive a deploy.
+[[headers]]
+  for = "/assets/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/vendor/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

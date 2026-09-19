@@ -1,0 +1,150 @@
+/* =====================================================================
+   TUMLET DESIGN SYSTEM — TOKENS
+   Two Nepali friends, board games, Kathmandu. Warm, playful, a little
+   hand-drawn. Nostalgia > polish. Wonky > tidy.
+
+   Vendored from tumlet-design-system-806a1149. Two deliberate changes
+   for this app:
+     1. The Google Fonts @import is replaced by self-hosted faces in
+        fonts.css, so the PWA makes no third-party requests and renders
+        correctly offline.
+     2. The legacy Outfit @font-face block is dropped — the design system
+        marks it "not used in current system" and it is 9 unused TTFs.
+   Token values below are otherwise unchanged.
+   ===================================================================== */
+
+:root {
+  /* ---------- CORE BRAND COLORS ----------
+     The three Tumlet signature hues. Every composition should lean on
+     these before reaching for anything else. */
+  --tumlet-red:        #F16147;  /* primary — "the momo chilli". CTAs, accents. */
+  --tumlet-yellow:     #F3B952;  /* primary — "the dalle". Tags, shadows, backdrops. */
+  --tumlet-beige:      #FAF1E4;  /* primary — "the plate". Page backgrounds. */
+
+  /* ---------- INK & PAPER ---------- */
+  --tumlet-ink:        #130D01;  /* near-black. All body text, borders. */
+  --tumlet-brown:      #5A3A1F;  /* warm brown — "the ghee". Character card strokes. */
+  --tumlet-paper:      #FFFFFF;  /* pure white — only where needed (logo plate). */
+  --tumlet-footer:     #6B6B6B;  /* muted — footer text, timestamps. */
+
+  /* ---------- GAME-SPECIFIC ACCENTS ---------- */
+  --bluff-orange:      #F16147;  /* Bluff Momo — same as brand red. */
+  --bluff-yellow:      #F3B952;  /* Bluff Momo — border + shadow. */
+  --ganthan-coral:     #F16147;  /* Ganthan — coral; same red, different frame. */
+  --ganthan-purple:    #7184BE;  /* Ganthan — dusky purple secondary. */
+  --thug-green:        #5A8A4A;  /* Thug — approximate, wired to game. */
+
+  /* ---------- SHADOWS ----------
+     The signature: offset hard shadows, NEVER blurred. Always paired
+     with a -0.88deg rotation on CTAs to feel sketched. */
+  --shadow-hard-yellow: 8px 8px 0px 0px var(--tumlet-yellow);
+  --shadow-hard-red:    8px 8px 0px 0px var(--tumlet-red);
+  --shadow-hard-brown:  8px 8px 0px 0px #D68057;
+  --shadow-hard-soft:   4px 4px 0px 0px var(--tumlet-ink);
+  --shadow-press:       2px 2px 0px 0px var(--tumlet-red);
+
+  /* ---------- STROKES & RADII ---------- */
+  --stroke-hairline:   1px;
+  --stroke-1:          2px;
+  --stroke-2:          4px;
+  --stroke-heavy:      6px;
+
+  --radius-sm:         8px;
+  --radius-md:         12px;
+  --radius-lg:         16px;
+  --radius-xl:         24px;
+  --radius-pill:       999px;
+
+  /* ---------- SPACE SCALE ---------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+
+  /* ---------- TYPE FAMILIES ----------
+     Baloo 2 is declared for Devanagari but not vendored — this app ships
+     no Devanagari copy yet. Add the face to fonts.css before using it. */
+  --font-body:    'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Manrope', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-hand:    'Patrick Hand', 'Atkinson Hyperlegible', cursive;
+  --font-nepali:  'Baloo 2', 'Atkinson Hyperlegible', sans-serif;
+
+  /* ---------- TYPE SCALE (web) ---------- */
+  --fs-xs:     12px;
+  --fs-sm:     14px;
+  --fs-base:   16px;
+  --fs-lg:     18px;
+  --fs-xl:     20px;
+  --fs-2xl:    24px;
+  --fs-3xl:    30px;
+  --fs-4xl:    36px;
+  --fs-5xl:    48px;
+  --fs-6xl:    60px;
+  --fs-hero:   clamp(40px, 6vw, 72px);
+
+  --lh-tight:  1.1;
+  --lh-snug:   1.25;
+  --lh-body:   1.5;  /* global default — Tumlet enforces 150% line-height */
+  --lh-loose:  1.75;
+
+  --tr-wide:   0.02em;
+}
+
+/* =====================================================================
+   GLOBAL RESET & BASE
+   ===================================================================== */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--tumlet-beige);
+  color: var(--tumlet-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* { line-height: var(--lh-body); }
+
+a {
+  color: var(--tumlet-ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+a.link-underline, a.underline { text-decoration: underline; }
+
+/* =====================================================================
+   TYPE UTILITIES
+   ===================================================================== */
+.t-hero {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-hero);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+}
+.t-h1 { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-5xl); line-height: var(--lh-tight); }
+.t-h2 { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-4xl); line-height: var(--lh-snug); }
+.t-h3 { font-family: var(--font-body);    font-weight: 700; font-size: var(--fs-2xl); line-height: var(--lh-snug); }
+.t-body-lg { font-size: var(--fs-lg); line-height: var(--lh-body); }
+.t-body    { font-size: var(--fs-base); line-height: var(--lh-body); }
+.t-small   { font-size: var(--fs-sm); line-height: var(--lh-body); }
+.t-caveat  { font-family: var(--font-hand); font-weight: 500; }
+
+/* The design system's signature component classes (.btn-nav, .btn-cta,
+   .char-card, .frame-*, .tag, .meta) are omitted here because this app
+   uses none of them directly — its CTA re-expresses .btn-cta.red at
+   app-specific sizing in app.css, built from the tokens above. */

@@ -1,0 +1,255 @@
+/* =====================================================================
+   katakhelne — board games in Kathmandu
+   Ported from the Claude Design prototype "Kathmandu Board Game Map".
+   Values are pixel-faithful to the design; design-system tokens are used
+   wherever the design's literal value matches a token exactly.
+   ===================================================================== */
+
+html, body { height: 100%; background: #EDE9E3; }
+body {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  overscroll-behavior: none;   /* no pull-to-refresh over the map */
+}
+a         { color: var(--tumlet-ink); }
+a:hover   { color: var(--tumlet-red); }
+
+/* ---------- device frame ----------
+   On a desktop viewport this is a phone mockup, exactly as designed. On a
+   phone — or once installed — the device IS the frame, so the bezel is
+   dropped and the notch / home-indicator insets come into play. */
+.phone {
+  position: relative;
+  width: 100%; max-width: 420px;
+  height: 100dvh; max-height: 920px;
+  background: var(--tumlet-paper);
+  overflow: hidden;
+  --sheet-visible: 148px;
+  --sat: 0px;   /* safe-area inset, top */
+  --sab: 0px;   /* safe-area inset, bottom */
+}
+@media (min-width: 460px) {
+  .phone { border-radius: 28px; box-shadow: 0 24px 60px rgba(19,13,1,.22); height: 92dvh; }
+}
+@media (max-width: 459.98px) {
+  .phone { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+}
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  .phone {
+    max-width: none; max-height: none; height: 100dvh;
+    border-radius: 0; box-shadow: none;
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* ---------- map ---------- */
+#map { position: absolute; inset: 0; background: #f4f2ef; }
+.leaflet-tile-pane { filter: grayscale(1) sepia(.10) brightness(1.07) contrast(.9); }
+.leaflet-container { font-family: var(--font-body); background: #f4f2ef; }
+.leaflet-control-attribution {
+  font-size: 9px; background: rgba(255,255,255,.72); white-space: nowrap;
+  padding: 2px 6px; border-radius: var(--radius-sm); color: #8a8580;
+  margin: calc(8px + var(--sat)) 10px 0 0 !important;
+}
+.leaflet-control-attribution a { color: #8a8580; }
+.no-tiles .leaflet-tile-pane { display: none; }
+.notile-note {
+  position: absolute; top: calc(60px + var(--sat)); left: 14px; z-index: 600;
+  background: rgba(255,255,255,.92); color: #8a8580; font-size: 11.5px;
+  padding: 6px 12px; border-radius: var(--radius-pill);
+  box-shadow: 0 2px 10px rgba(19,13,1,.1);
+}
+
+/* ---------- pins ---------- */
+.pin-dot {
+  width: 13px; height: 13px; border-radius: 50%; background: var(--tumlet-paper);
+  border: 2.5px solid var(--tumlet-ink); box-shadow: 0 2px 6px rgba(19,13,1,.28);
+}
+.pin-label {
+  display: inline-flex; align-items: center; white-space: nowrap;
+  background: var(--tumlet-paper); color: var(--tumlet-ink); border: 1px solid rgba(19,13,1,.12);
+  font-family: var(--font-body); font-weight: 700; font-size: 12px; line-height: 1;
+  padding: 7px 11px; border-radius: var(--radius-pill); box-shadow: 0 2px 8px rgba(19,13,1,.18);
+}
+.pin-active .pin-label { background: var(--tumlet-red); color: var(--tumlet-paper);
+                         border-color: var(--tumlet-red); transform: scale(1.06); }
+.pin-active .pin-dot   { background: var(--tumlet-red); border-color: var(--tumlet-red);
+                         width: 17px; height: 17px; }
+.pin-wrap { display: grid; place-items: center; }
+.me {
+  width: 16px; height: 16px; border-radius: 50%; background: var(--ganthan-purple);
+  border: 3px solid var(--tumlet-paper);
+  box-shadow: 0 0 0 6px rgba(113,132,190,.22), 0 2px 6px rgba(19,13,1,.3);
+}
+
+/* ---------- brand chip ---------- */
+.brand {
+  position: absolute; top: calc(14px + var(--sat)); left: 14px; z-index: 600;
+  height: 36px; padding: 0 13px 0 11px; display: flex; align-items: center; gap: 8px;
+  background: var(--tumlet-paper); border-radius: var(--radius-pill);
+  box-shadow: 0 2px 10px rgba(19,13,1,.14);
+}
+.tt { font-family: var(--font-display); font-weight: 800; font-size: 17px;
+      letter-spacing: -.06em; line-height: 1; }
+.tt span:first-child { color: var(--tumlet-red); }
+.tt span:last-child  { color: var(--tumlet-yellow); margin-left: -5px; }
+.brand em { font-family: var(--font-hand); font-style: normal; font-size: 14px;
+            color: var(--tumlet-footer); line-height: 1; }
+
+/* ---------- locate ---------- */
+.locate {
+  position: absolute; right: 14px; z-index: 600; bottom: calc(var(--sheet-visible) + 14px);
+  width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--tumlet-paper);
+  cursor: pointer; display: grid; place-items: center;
+  box-shadow: 0 3px 14px rgba(19,13,1,.2);
+  transition: bottom .28s cubic-bezier(.32,.72,0,1), transform .15s ease;
+}
+.locate:active { transform: scale(.93); }
+.locate svg    { width: 21px; height: 21px; color: var(--tumlet-ink); }
+.locate.on svg { color: var(--tumlet-red); }
+
+/* ---------- install prompt ----------
+   A CTA, so it takes the two signature Tumlet tells: a hard offset shadow
+   and the -0.88deg wonk. Scaled to chip size. */
+.install {
+  position: absolute; left: 14px; z-index: 600; bottom: calc(var(--sheet-visible) + 14px);
+  height: 46px; padding: 0 6px 0 15px; display: none; align-items: center; gap: 4px;
+  background: var(--tumlet-red); border-radius: var(--radius-pill);
+  box-shadow: 4px 4px 0 0 var(--tumlet-yellow); transform: rotate(-0.88deg);
+  transition: bottom .28s cubic-bezier(.32,.72,0,1), transform .2s ease;
+}
+.install[data-show="1"] { display: inline-flex; }
+.install:hover  { transform: rotate(-0.88deg) translate(-2px,-2px); }
+.install button {
+  background: none; border: 0; cursor: pointer; color: var(--tumlet-paper);
+  font-family: var(--font-body); line-height: 1;
+}
+.install .go { font-weight: 700; font-size: 13.5px; padding: 0; }
+.install .x  { font-size: 19px; width: 28px; height: 28px; opacity: .8; border-radius: 50%; }
+.install .x:hover { opacity: 1; background: rgba(255,255,255,.16); }
+
+/* ---------- toast ---------- */
+.toast {
+  position: absolute; left: 50%; transform: translateX(-50%); z-index: 700;
+  bottom: calc(var(--sheet-visible) + 74px);
+  background: var(--tumlet-ink); color: var(--tumlet-paper); font-size: 12.5px;
+  padding: 8px 14px; border-radius: var(--radius-pill);
+  opacity: 0; pointer-events: none; transition: opacity .3s ease; white-space: nowrap;
+}
+.toast.show   { opacity: .94; }
+.toast.action { pointer-events: auto; cursor: pointer; }
+.toast.action u { text-underline-offset: 2px; margin-left: 7px; font-weight: 700; }
+
+/* ---------- sheet ---------- */
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 88%; z-index: 650;
+  background: var(--tumlet-paper); border-radius: 20px 20px 0 0;
+  box-shadow: 0 -6px 30px rgba(19,13,1,.16);
+  display: flex; flex-direction: column;
+  transition: transform .34s cubic-bezier(.32,.72,0,1);
+  will-change: transform;
+}
+.grab { padding: 9px 0 3px; display: grid; place-items: center; cursor: grab;
+        flex: none; touch-action: none; }
+.grab i { display: block; width: 38px; height: 4px; border-radius: 99px; background: rgba(19,13,1,.16); }
+.head {
+  padding: 2px 20px 12px; flex: none; cursor: grab; touch-action: none;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+}
+.head h1 { margin: 0; font-family: var(--font-display); font-weight: 700;
+           font-size: 17px; letter-spacing: -.01em; }
+.head small { font-size: 12.5px; color: #8a8580; flex: none; }
+.body {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; padding: 0 0 28px; touch-action: pan-y;
+}
+
+/* ---------- list ---------- */
+.row {
+  display: flex; gap: 13px; padding: 11px 20px; cursor: pointer; align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.row:active { background: #faf8f5; }
+.row.sel    { background: #faf6f1; }
+.thumb {
+  width: 74px; height: 74px; border-radius: var(--radius-md); flex: none; overflow: hidden;
+  background: var(--tumlet-beige); display: grid; place-items: center;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb b   { font-family: var(--font-display); font-weight: 800; font-size: 26px; color: rgba(19,13,1,.13); }
+.rmain { min-width: 0; flex: 1; }
+.rtop  { display: flex; align-items: center; gap: 5px; }
+.rtop h2 { margin: 0; font-size: 15px; font-weight: 700;
+           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rmeta { font-size: 13px; color: #8a8580; white-space: nowrap; overflow: hidden;
+         text-overflow: ellipsis; margin-top: 1px; }
+.rgames { font-size: 13px; margin-top: 3px; font-weight: 600; }
+.dist { font-size: 12.5px; color: #8a8580; flex: none; align-self: flex-start; padding-top: 3px; }
+.tick { width: 14px; height: 14px; flex: none; color: var(--tumlet-red); }
+.sep  { height: 1px; background: rgba(19,13,1,.07); margin: 0 20px; }
+
+/* ---------- detail ---------- */
+.detail { padding: 0 20px; }
+.back {
+  display: inline-flex; align-items: center; gap: 6px; background: none; border: 0;
+  cursor: pointer; font-family: var(--font-body); font-size: 13px; color: #8a8580;
+  padding: 0 0 12px;
+}
+.hero {
+  width: 100%; aspect-ratio: 16/10; border-radius: 14px; overflow: hidden;
+  background: var(--tumlet-beige); display: grid; place-items: center;
+}
+.hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero b   { font-family: var(--font-display); font-weight: 800; font-size: 56px; color: rgba(19,13,1,.12); }
+.detail h2 { margin: 16px 0 2px; font-family: var(--font-display); font-weight: 700;
+             font-size: 23px; letter-spacing: -.015em; }
+.dmeta { font-size: 13.5px; color: #8a8580; }
+.blurb { margin: 12px 0 0; font-size: 14.5px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.chip  { font-size: 12.5px; padding: 5px 11px; border-radius: var(--radius-pill);
+         background: var(--tumlet-beige); font-weight: 600; }
+.chip.more { background: none; color: #8a8580; font-weight: 400; }
+.line { height: 1px; background: rgba(19,13,1,.07); margin: 18px 0; }
+.kv   { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
+.kv span { color: #8a8580; }
+.vbadge { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;
+          font-weight: 600; margin-top: 10px; }
+
+/* CTA — the design system's .btn-cta.red at this app's sizing:
+   red fill, hard yellow offset shadow, -0.88deg wonk. */
+.cta {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  width: 100%; margin-top: 22px;
+  font-family: var(--font-body); font-weight: 700; font-size: 15.5px; color: var(--tumlet-paper);
+  background: var(--tumlet-red); border: 0; border-radius: var(--radius-md);
+  padding: var(--space-4); cursor: pointer;
+  transform: rotate(-0.88deg); box-shadow: var(--shadow-hard-yellow);
+  transition: transform .2s ease, box-shadow .15s ease; text-decoration: none;
+}
+.cta:hover  { transform: rotate(-0.88deg) translate(-3px,-3px); color: var(--tumlet-paper); }
+.cta:active { transform: rotate(-0.88deg); box-shadow: 2px 2px 0 0 #A42726; }
+
+.hidden { display: none; }
+
+/* ---------- accessibility ----------
+   List rows are focusable controls, so they need a visible focus ring the
+   prototype's click-only divs never had. */
+.row:focus-visible,
+.locate:focus-visible,
+.back:focus-visible,
+.cta:focus-visible,
+.install button:focus-visible {
+  outline: 2px solid var(--tumlet-red);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
