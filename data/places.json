@@ -23,24 +23,6 @@
       "verified": false
     },
     {
-      "id": "p02",
-      "name": "Khusi Coffee House",
-      "type": "Cafe",
-      "area": "",
-      "lat": null,
-      "lng": null,
-      "approx": true,
-      "photo": "",
-      "blurb": "",
-      "collection": "Crazy collection",
-      "games": [
-        "Bluff Momo"
-      ],
-      "gameCount": null,
-      "phone": "",
-      "verified": false
-    },
-    {
       "id": "p03",
       "name": "Plus Eight One Cafe",
       "type": "Cafe",

@@ -114,7 +114,7 @@ grid, which would count as bulk downloading under that policy.
 
 ## The data
 
-`data/places.json` is the list — 12 cafes around the valley. Edit it and the
+`data/places.json` is the list — 11 cafes around the valley. Edit it and the
 map picks the change up on reload; there is nothing to rebuild.
 
 ```json
