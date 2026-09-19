@@ -35,6 +35,21 @@ function esc(v) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+/* A place can be on the list before anyone has pinned it down. */
+const placed = p => typeof p.lat === 'number' && typeof p.lng === 'number';
+
+/* What a row says about the shelf. Real listings rarely have a countable
+   total, so a qualitative note ("Crazy collection") wins when present, a
+   real count is used when known, and otherwise we only claim what we can
+   actually name. Never a fabricated number. */
+function shelf(p) {
+  if (p.collection) return esc(p.collection);
+  if (p.gameCount)  return esc(p.gameCount) + ' games';
+  const n = (p.games || []).length;
+  if (n) return n + (n === 1 ? ' game listed' : ' games listed');
+  return '';
+}
+
 /* ---------- map ---------- */
 const map = L.map('map', { zoomControl: false, attributionControl: false, zoomSnap: .5 })
   .setView(CFG.map.center, CFG.map.zoom);
@@ -204,10 +219,15 @@ function focusOn(lat, lng, zoom) {
 }
 
 /* ---------- render ---------- */
+/* Located: nearest first, with the unpinned places last. Otherwise the
+   curated order of places.json is the order — with no reliable game counts
+   there is nothing honest to rank by, and the file's order is a real
+   editorial choice. */
 function sorted() {
   const l = DATA.slice();
-  if (userLoc) l.sort((a, b) => a._d - b._d);
-  else l.sort((a, b) => b.gameCount - a.gameCount);
+  if (userLoc) {
+    l.sort((a, b) => (a._d == null) - (b._d == null) || a._d - b._d);
+  }
   return l;
 }
 function thumbHTML(p) {
@@ -226,10 +246,10 @@ function renderList() {
       '<div class="rmain">' +
         '<div class="rtop"><h2>' + esc(p.name) + '</h2>' +
           (p.verified ? TICK + '<span class="sr-only">Played here by Tumlet</span>' : '') + '</div>' +
-        '<div class="rmeta">' + esc(p.type) + ' · ' + esc(p.area) + '</div>' +
-        '<div class="rgames">' + esc(p.gameCount) + ' games</div>' +
+        '<div class="rmeta">' + esc(p.type) + (p.area ? ' · ' + esc(p.area) : '') + '</div>' +
+        (shelf(p) ? '<div class="rgames">' + shelf(p) + '</div>' : '') +
       '</div>' +
-      (userLoc ? '<div class="dist">' + fmt(p._d) + '</div>' : '') +
+      (userLoc && p._d != null ? '<div class="dist">' + fmt(p._d) + '</div>' : '') +
     '</div>' + (i < l.length - 1 ? '<div class="sep"></div>' : '')
   ).join('');
 
@@ -241,26 +261,54 @@ function renderList() {
   });
 }
 function renderDetail(p) {
-  const shown = p.games.slice(0, 6);
-  const rest = Math.max(0, p.gameCount - shown.length);
-  const dir = CFG.directionsUrl
-    .replace('{lat}', encodeURIComponent(p.lat))
-    .replace('{lng}', encodeURIComponent(p.lng));
+  const games = p.games || [];
+  const shown = games.slice(0, 6);
+  /* Only claim a bigger shelf when a real total is on record. */
+  const total = p.gameCount || games.length;
+  const rest  = Math.max(0, total - shown.length);
 
-  detailEl.innerHTML =
+  const meta = [esc(p.type), p.area && esc(p.area),
+                (userLoc && p._d != null) && fmt(p._d) + ' away'].filter(Boolean);
+
+  let html =
     '<button class="back" id="back" type="button">← all places</button>' +
     '<div class="hero">' + thumbHTML(p) + '</div>' +
     '<h2>' + esc(p.name) + '</h2>' +
-    '<div class="dmeta">' + esc(p.type) + ' · ' + esc(p.area) +
-      (userLoc ? ' · ' + fmt(p._d) + ' away' : '') + '</div>' +
-    (p.verified ? '<div class="vbadge">' + TICK + ' Played here by Tumlet</div>' : '') +
-    '<p class="blurb">' + esc(p.blurb) + '</p>' +
-    '<div class="chips">' + shown.map(g => '<span class="chip">' + esc(g) + '</span>').join('') +
-      (rest ? '<span class="chip more">+' + rest + ' more</span>' : '') + '</div>' +
-    '<div class="line"></div>' +
-    '<div class="kv"><span>Phone</span><a href="tel:' + esc(p.phone) + '">' + esc(p.phone) + '</a></div>' +
-    '<a class="cta" target="_blank" rel="noopener" href="' + esc(dir) + '">Get directions</a>';
+    '<div class="dmeta">' + meta.join(' · ') + '</div>' +
+    (p.verified ? '<div class="vbadge">' + TICK + ' Played here by Tumlet</div>' : '');
 
+  if (p.blurb) html += '<p class="blurb">' + esc(p.blurb) + '</p>';
+
+  if (shown.length) {
+    html += '<div class="chips">' +
+      shown.map(g => '<span class="chip">' + esc(g) + '</span>').join('') +
+      (rest ? '<span class="chip more">+' + rest + ' more</span>' : '') + '</div>';
+  }
+
+  /* Say so when the pin is only the neighbourhood — someone about to walk
+     there should know the difference. */
+  if (!placed(p)) {
+    html += '<div class="note">Location not added yet.</div>';
+  } else if (p.approx) {
+    html += '<div class="note">Pin shows the ' + esc(p.area || 'area') +
+            ' area, not the exact address.</div>';
+  }
+
+  if (p.phone) {
+    html += '<div class="line"></div>' +
+      '<div class="kv"><span>Phone</span><a href="tel:' + esc(p.phone) + '">' +
+      esc(p.phone) + '</a></div>';
+  }
+
+  if (placed(p)) {
+    const dir = CFG.directionsUrl
+      .replace('{lat}', encodeURIComponent(p.lat))
+      .replace('{lng}', encodeURIComponent(p.lng));
+    html += '<a class="cta" target="_blank" rel="noopener" href="' + esc(dir) +
+            '">Get directions</a>';
+  }
+
+  detailEl.innerHTML = html;
   detailEl.querySelector('#back').addEventListener('click', deselect);
 }
 /* Where the list was scrolled to before opening a detail, so going back
@@ -277,14 +325,18 @@ function select(id) {
     markers[selected].setZIndexOffset(0);
   }
   selected = id;
-  markers[id].setIcon(icon(p, true));
-  markers[id].setZIndexOffset(1000);
+  if (markers[id]) {
+    markers[id].setIcon(icon(p, true));
+    markers[id].setZIndexOffset(1000);
+  }
   renderDetail(p);
   listEl.classList.add('hidden');
   detailEl.classList.remove('hidden');
   bodyEl.scrollTop = 0;
   if (snapName === 'full' || snapName === 'peek') setSnap('half');
-  setTimeout(() => focusOn(p.lat, p.lng, Math.max(15.5, map.getZoom())), 20);
+  if (placed(p)) {
+    setTimeout(() => focusOn(p.lat, p.lng, Math.max(15.5, map.getZoom())), 20);
+  }
 }
 function deselect() {
   if (selected && markers[selected]) {
@@ -302,13 +354,15 @@ map.on('zoomend', () => {
   const on = map.getZoom() >= CFG.map.labelZoom;
   if (on === labelsOn) return;
   labelsOn = on;
-  DATA.forEach(p => markers[p.id].setIcon(icon(p, p.id === selected)));
+  DATA.forEach(p => {
+    if (markers[p.id]) markers[p.id].setIcon(icon(p, p.id === selected));
+  });
 });
 
 /* ---------- locate ---------- */
 function applyLocation(lat, lng, demo) {
   userLoc = [lat, lng];
-  DATA.forEach(p => { p._d = dist(lat, lng, p.lat, p.lng); });
+  DATA.forEach(p => { p._d = placed(p) ? dist(lat, lng, p.lat, p.lng) : null; });
   if (meMarker) map.removeLayer(meMarker);
   meMarker = L.marker([lat, lng], {
     icon: L.divIcon({ className: 'pin-wrap', html: '<div class="me"></div>',
@@ -323,9 +377,9 @@ function applyLocation(lat, lng, demo) {
   bodyEl.scrollTop = 0;
   setSnap('half');
   setTimeout(() => focusOn(lat, lng, 14.5), 20);
-  const near = sorted()[0];
-  toast(demo ? 'Using a demo location in Thamel'
-             : near.name + ' is ' + fmt(near._d) + ' away');
+  const near = sorted().find(p => p._d != null);
+  if (demo) toast('Using a demo location in Thamel');
+  else if (near) toast(near.name + ' is ' + fmt(near._d) + ' away');
 }
 function doLocate() {
   if (userLoc) { focusOn(userLoc[0], userLoc[1], 14.5); return; }
@@ -344,13 +398,18 @@ locateBtn.addEventListener('click', doLocate);
 function boot(d) {
   DATA = d.places;
   if (d.center) map.setView(d.center, CFG.map.zoom);
-  DATA.forEach(p => {
+  /* A place can be listed before anyone has pinned it; it simply gets no
+     marker, and its detail page says so. */
+  const pins = DATA.filter(placed);
+  pins.forEach(p => {
     const m = L.marker([p.lat, p.lng], { icon: icon(p, false) }).addTo(map);
     m.on('click', () => select(p.id));
     markers[p.id] = m;
   });
-  map.fitBounds(L.latLngBounds(DATA.map(p => [p.lat, p.lng])),
-                { paddingTopLeft: [36, 70], paddingBottomRight: [36, 180] });
+  if (pins.length) {
+    map.fitBounds(L.latLngBounds(pins.map(p => [p.lat, p.lng])),
+                  { paddingTopLeft: [36, 70], paddingBottomRight: [36, 180] });
+  }
   computeSnaps();
   renderList();
 

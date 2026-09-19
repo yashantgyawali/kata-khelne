@@ -114,47 +114,76 @@ grid, which would count as bulk downloading under that policy.
 
 ## The data
 
-`data/places.json` is **seed data**. Replace it with a real list; keep the
-field names and the map picks it up on reload.
+`data/places.json` is the list — 12 cafes around the valley. Edit it and the
+map picks the change up on reload; there is nothing to rebuild.
 
 ```json
 {
-  "city": "Kathmandu",
-  "center": [27.7089, 85.3206],
-  "places": [
-    {
-      "id": "p01",
-      "name": "Dice & Dumpling",
-      "type": "Cafe",
-      "area": "Thamel",
-      "lat": 27.7154,
-      "lng": 85.3123,
-      "photo": "",
-      "blurb": "Upstairs corner table by the window, shelf of well-worn boxes.",
-      "games": ["Catan", "Codenames", "Bluff Momo"],
-      "gameCount": 24,
-      "phone": "9851312103",
-      "verified": true
-    }
-  ]
+  "id": "p11",
+  "name": "Daily Drip",
+  "type": "Cafe",
+  "area": "Tundaldevi, Baluwatar",
+  "lat": 27.724603,
+  "lng": 85.331017,
+  "approx": true,
+  "photo": "",
+  "blurb": "",
+  "collection": "Good collection",
+  "games": ["Bluff Momo", "Dungeons & Dragons"],
+  "gameCount": null,
+  "phone": "",
+  "verified": false
 }
 ```
 
 | field | notes |
 |---|---|
 | `id` | unique; any stable string |
-| `photo` | image URL, or `""` to fall back to the initial on a beige tile |
-| `games` | the first 6 are shown as chips; the rest collapse into "+N more" |
-| `gameCount` | total on the shelf — also the default sort when there is no location |
+| `lat` / `lng` | `null` is fine — the place still lists, it just gets no pin and its detail page says "Location not added yet" |
+| `approx` | `true` = the pin is the neighbourhood centre, not the door. The detail page says so |
+| `photo` | image URL or a repo path like `assets/photos/daily-drip.jpg`; `""` falls back to the initial on a beige tile |
+| `blurb` | one or two lines. Empty is fine — the paragraph is skipped entirely |
+| `collection` | a human note like "Crazy collection". Shown in the list instead of a number |
+| `games` | named games; the first 6 become chips |
+| `gameCount` | total on the shelf **if you actually know it**, else `null` |
+| `phone` | empty hides the phone row completely |
 | `verified` | shows the "Played here by Tumlet" badge |
 
-With no location the list sorts by `gameCount`; once located it sorts by
-distance and shows how far each place is.
+The list row shows `collection` if set, else `gameCount` as "N games", else
+"N games listed" from the named games — so it never states a total nobody
+has counted.
 
-Place strings are HTML-escaped on render, so an `&` or a stray `<` in a name
-cannot break the page.
+**Ordering.** With no location the list keeps the order of the file, which
+makes that order an editorial decision worth making deliberately. Once
+located it sorts by distance, with unpinned places last.
 
----
+### Where the coordinates came from
+
+Geocoded against [Nominatim](https://nominatim.openstreetmap.org/), OSM's own
+geocoder — same open data as the basemap, no API key. Three resolved to the
+actual venue; the rest only to their neighbourhood and carry `approx: true`.
+Where two approximate pins landed on the same centroid they are nudged ~110 m
+apart so both stay tappable.
+
+To pin one exactly: open [openstreetmap.org](https://www.openstreetmap.org),
+right-click the spot → "Show address", copy the lat/lng in, and set
+`approx` to `false`.
+
+### Photos
+
+`photo` is empty for every place, and the initial-on-beige fallback is doing
+the work. **Google's place photos are not usable here** — the Places API
+needs a billed API key, and the images are third-party copyrighted works that
+scraping would not license for a public site. Hotlinked Google URLs also
+expire.
+
+The workable routes, in order of how well they fit:
+
+1. **Your own photos.** Drop files in `assets/photos/` and point `photo` at
+   them. You have been to these places.
+2. **Ask the cafes.** Most will happily hand over a photo for a listing.
+3. **Google Places API** with your own key, if you want it automated — the
+   `photo` field takes any URL, so nothing in the app needs to change.
 
 ## PWA behaviour
 

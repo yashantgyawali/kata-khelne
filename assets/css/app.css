@@ -217,6 +217,13 @@ a:hover   { color: var(--tumlet-red); }
 .vbadge { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;
           font-weight: 600; margin-top: 10px; }
 
+/* Honest caveat about a pin — neighbourhood-level, or not placed at all. */
+.note {
+  margin-top: 14px; padding: 9px 12px;
+  font-size: 12.5px; color: #8a8580;
+  background: var(--tumlet-beige); border-radius: var(--radius-sm);
+}
+
 /* CTA — the design system's .btn-cta.red at this app's sizing:
    red fill, hard yellow offset shadow, -0.88deg wonk. */
 .cta {

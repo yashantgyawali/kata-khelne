@@ -9,7 +9,7 @@
 
 self.KK = {
   /* Bump to invalidate every cache on the next service-worker activation. */
-  version: '1.0.0',
+  version: '1.1.0',
 
   tiles: {
     /* OpenStreetMap's own tiles: open data, open renderer, no API key.

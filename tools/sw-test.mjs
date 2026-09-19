@@ -119,7 +119,14 @@ async function fireFetch(input, init) {
 /* ================= run ================= */
 console.log('\nsw.js lifecycle\n');
 
-ok('config.js loaded via importScripts', self_.KK && self_.KK.version === '1.0.0');
+/* Read expectations from the real files rather than baking in numbers that
+   go stale the moment the data or the version changes. */
+const EXPECTED_PLACES =
+  JSON.parse(fs.readFileSync(path.join(ROOT, 'data/places.json'), 'utf8')).places.length;
+
+ok('config.js loaded via importScripts',
+   !!(self_.KK && /^\d+\.\d+\.\d+$/.test(self_.KK.version || '')),
+   `(version ${self_.KK && self_.KK.version})`);
 
 /* a stale cache from a previous version must be cleaned up on activate */
 (await self_.caches.open('kk-shell-0.9.0')).put('http://localhost:8000/old', new Response('x'));
@@ -155,7 +162,9 @@ ok('navigation is answered', !!nav && nav.status === 200);
 
 const pj = await fireFetch('http://localhost:8000/data/places.json');
 const pjBody = pj && JSON.parse(await pj.text());
-ok('places.json returns real data', !!pjBody && pjBody.places.length === 14);
+ok('places.json returns real data',
+   !!pjBody && pjBody.places.length === EXPECTED_PLACES,
+   `(expected ${EXPECTED_PLACES}, got ${pjBody && pjBody.places.length})`);
 
 const css = await fireFetch('http://localhost:8000/assets/css/app.css');
 ok('shell asset is answered', !!css && css.status === 200);
@@ -172,7 +181,7 @@ const offlineNav = await fireFetch('http://localhost:8000/', { mode: 'navigate' 
 ok('navigation still served with the network down', !!offlineNav && offlineNav.status === 200);
 const offlineData = await fireFetch('http://localhost:8000/data/places.json');
 ok('places.json still served with the network down',
-   !!offlineData && JSON.parse(await offlineData.text()).places.length === 14);
+   !!offlineData && JSON.parse(await offlineData.text()).places.length === EXPECTED_PLACES);
 tileServerDown = false;
 
 /* --- eviction --- */
